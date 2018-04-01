@@ -18,8 +18,7 @@ struct RBTree<K: Ord, V> {
     root: Option<RBNode<K, V>>
 }
 
-fn search_node<'a, K: Ord, V>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a mut V> {
-
+fn search_node<'a, K: Ord, V>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a mut RBNode<K, V>> {
     match root.key.cmp(key) {
         Ordering::Less => {
             root.left_child.as_mut().map_or(None, |x| search_node(x, key))
@@ -29,7 +28,7 @@ fn search_node<'a, K: Ord, V>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a
         },
         Ordering::Equal => {
             if root.key == *key {
-                Some(&mut root.value)
+                Some(root)
             } else {
                 None
             }
@@ -68,10 +67,7 @@ impl<K, V> RBTree<K, V>
     }
 
     pub fn get_mut(&mut self, key: K) -> Option<&mut V> {
-        match self.root {
-            Some(ref mut node) => search_node(node, &key),
-            None => None,
-        }
+        self.root.as_mut().and_then(|x| search_node(x, &key).map(|x| &mut (*x).value))
     }
 }
 
