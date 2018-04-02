@@ -36,8 +36,27 @@ fn search_node<'a, K: Ord, V>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a
     }
 }
 
+fn insert_node<K: Ord, V>(root: &mut RBNode<K, V>, key: K, value: V) -> Option<V> {
+    match root.key.cmp(&key) {
+        Ordering::Less => {
+            unimplemented!()
+        },
+        Ordering::Greater => {
+            unimplemented!()
+        },
+        Ordering::Equal => {
+            Some(std::mem::replace(&mut root.value, value))
+        }
+    }
+}
+
 impl<K, V> RBNode<K, V>
     where K: Ord {
+
+    fn new(key: K, value: V) -> Self {
+        RBNode::with_color(RBColor::Black, key, value)
+    }
+
     fn with_color(color: RBColor, key: K, value: V) -> Self {
         RBNode {
             color,
@@ -62,7 +81,7 @@ impl<K, V> RBTree<K, V>
             self.root = Some(RBNode::with_color(RBColor::Black, key, value));
             None
         } else {
-            None
+            self.root.as_mut().and_then(|x| insert_node(x, key, value))
         }
     }
 
@@ -77,4 +96,6 @@ fn main() {
     assert_eq!(None, tree.get_mut(123));
     assert_eq!(None, tree.insert(123, "123".to_string()));
     assert_eq!(Some(&mut "123".to_string()), tree.get_mut(123));
+    assert_eq!(Some("123".to_string()), tree.insert(123, "1234".to_string()));
+    assert_eq!(Some(&mut "1234".to_string()), tree.get_mut(123));
 }
