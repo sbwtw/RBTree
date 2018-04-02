@@ -73,4 +73,8 @@ impl<K, V> RBTree<K, V>
 
 fn main() {
     let mut tree = RBTree::<i32, String>::new();
+
+    assert_eq!(None, tree.get_mut(123));
+    assert_eq!(None, tree.insert(123, "123".to_string()));
+    assert_eq!(Some(&mut "123".to_string()), tree.get_mut(123));
 }
