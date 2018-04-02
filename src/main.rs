@@ -39,10 +39,20 @@ fn search_node<'a, K: Ord, V>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a
 fn insert_node<K: Ord, V>(root: &mut RBNode<K, V>, key: K, value: V) -> Option<V> {
     match root.key.cmp(&key) {
         Ordering::Less => {
-            unimplemented!()
+            if let Some(ref mut node) = root.left_child {
+                insert_node(&mut *node, key, value)
+            } else {
+                root.left_child = Some(Box::new(RBNode::new(key, value)));
+                None
+            }
         },
         Ordering::Greater => {
-            unimplemented!()
+            if let Some(ref mut node) = root.right_child {
+                insert_node(&mut *node, key, value)
+            } else {
+                root.right_child = Some(Box::new(RBNode::new(key, value)));
+                None
+            }
         },
         Ordering::Equal => {
             Some(std::mem::replace(&mut root.value, value))
@@ -98,4 +108,6 @@ fn main() {
     assert_eq!(Some(&mut "123".to_string()), tree.get_mut(123));
     assert_eq!(Some("123".to_string()), tree.insert(123, "1234".to_string()));
     assert_eq!(Some(&mut "1234".to_string()), tree.get_mut(123));
+    assert_eq!(None, tree.insert(120, "120".to_string()));
+    assert_eq!(None, tree.insert(126, "126".to_string()));
 }
