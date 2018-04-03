@@ -1,12 +1,14 @@
 
 use std::cmp::Ordering;
+use std::fmt;
 
+#[derive(Debug)]
 enum RBColor {
     Red,
     Black,
 }
 
-struct RBNode<K: Ord, V> {
+struct RBNode<K: Ord + fmt::Debug, V: fmt::Debug> {
     color: RBColor,
     key: K,
     value: V,
@@ -14,12 +16,12 @@ struct RBNode<K: Ord, V> {
     right_child: Option<Box<RBNode<K, V>>>,
 }
 
-struct RBTree<K: Ord, V> {
+struct RBTree<K: Ord + fmt::Debug, V: fmt::Debug> {
     root: Option<RBNode<K, V>>
 }
 
-fn search_node<'a, K: Ord, V>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a mut RBNode<K, V>> {
-    match root.key.cmp(key) {
+fn search_node<'a, K: Ord + fmt::Debug, V: fmt::Debug>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a mut RBNode<K, V>> {
+    match key.cmp(&root.key) {
         Ordering::Less => {
             root.left_child.as_mut().map_or(None, |x| search_node(x, key))
         },
@@ -36,8 +38,8 @@ fn search_node<'a, K: Ord, V>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a
     }
 }
 
-fn insert_node<K: Ord, V>(root: &mut RBNode<K, V>, key: K, value: V) -> Option<V> {
-    match root.key.cmp(&key) {
+fn insert_node<K: Ord + fmt::Debug, V: fmt::Debug>(root: &mut RBNode<K, V>, key: K, value: V) -> Option<V> {
+    match key.cmp(&root.key) {
         Ordering::Less => {
             if let Some(ref mut node) = root.left_child {
                 insert_node(&mut *node, key, value)
@@ -60,8 +62,15 @@ fn insert_node<K: Ord, V>(root: &mut RBNode<K, V>, key: K, value: V) -> Option<V
     }
 }
 
+fn dump<K: Ord + fmt::Debug, V: fmt::Debug>(root: &RBNode<K, V>) {
+
+    root.left_child.as_ref().map(|x| dump(&**x));
+    println!("({:?}\t{:?}, \t{:?})", root.color, root.key, root.value);
+    root.right_child.as_ref().map(|x| dump(&**x));
+}
+
 impl<K, V> RBNode<K, V>
-    where K: Ord {
+    where K: Ord + fmt::Debug, V: fmt::Debug {
 
     fn new(key: K, value: V) -> Self {
         RBNode::with_color(RBColor::Black, key, value)
@@ -79,7 +88,7 @@ impl<K, V> RBNode<K, V>
 }
 
 impl<K, V> RBTree<K, V>
-    where K: Ord {
+    where K: Ord + fmt::Debug, V: fmt::Debug {
     pub fn new() -> Self {
         RBTree {
             root: None,
@@ -103,6 +112,12 @@ impl<K, V> RBTree<K, V>
 fn main() {
     let mut tree = RBTree::<i32, String>::new();
 
+
+///
+///         123 -> "1234"
+///        /          \
+///  120 -> "120"   126 -> "126"
+///
     assert_eq!(None, tree.get_mut(123));
     assert_eq!(None, tree.insert(123, "123".to_string()));
     assert_eq!(Some(&mut "123".to_string()), tree.get_mut(123));
@@ -110,4 +125,17 @@ fn main() {
     assert_eq!(Some(&mut "1234".to_string()), tree.get_mut(123));
     assert_eq!(None, tree.insert(120, "120".to_string()));
     assert_eq!(None, tree.insert(126, "126".to_string()));
+
+    tree.root.map(|x| dump(&x));
+
+    let mut tree = RBTree::<i32, ()>::new();
+    tree.insert(8, ());
+    tree.insert(3, ());
+    tree.insert(5, ());
+    tree.insert(23, ());
+    tree.insert(6, ());
+    tree.insert(12, ());
+    tree.insert(3, ());
+
+    tree.root.map(|x| dump(&x));
 }
