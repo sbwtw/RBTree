@@ -8,16 +8,23 @@ enum RBColor {
     Black,
 }
 
+#[derive(Debug)]
+enum Direction {
+    Left,
+    Right,
+}
+
+type OptNode<K, V> = Option<Box<RBNode<K, V>>>;
 struct RBNode<K: Ord + fmt::Debug, V: fmt::Debug> {
     color: RBColor,
     key: K,
     value: V,
-    left_child: Option<Box<RBNode<K, V>>>,
-    right_child: Option<Box<RBNode<K, V>>>,
+    left_child: OptNode<K, V>,
+    right_child: OptNode<K, V>,
 }
 
 struct RBTree<K: Ord + fmt::Debug, V: fmt::Debug> {
-    root: Option<RBNode<K, V>>
+    root: OptNode<K, V>
 }
 
 fn search_node<'a, K: Ord + fmt::Debug, V: fmt::Debug>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a mut RBNode<K, V>> {
