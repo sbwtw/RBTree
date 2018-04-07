@@ -14,8 +14,14 @@ enum Direction {
     Right,
 }
 
+trait KeyTrait: Ord + fmt::Debug {}
+impl<T: Ord + fmt::Debug> KeyTrait for T {}
+
+trait ValueTrait: fmt::Debug {}
+impl<T: fmt::Debug> ValueTrait for T {}
+
 type OptNode<K, V> = Option<Box<RBNode<K, V>>>;
-struct RBNode<K: Ord + fmt::Debug, V: fmt::Debug> {
+struct RBNode<K: KeyTrait, V: ValueTrait> {
     color: RBColor,
     key: K,
     value: V,
@@ -23,11 +29,11 @@ struct RBNode<K: Ord + fmt::Debug, V: fmt::Debug> {
     right_child: OptNode<K, V>,
 }
 
-struct RBTree<K: Ord + fmt::Debug, V: fmt::Debug> {
+struct RBTree<K: KeyTrait, V: ValueTrait> {
     root: OptNode<K, V>
 }
 
-fn search_node<'a, K: Ord + fmt::Debug, V: fmt::Debug>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a mut RBNode<K, V>> {
+fn search_node<'a, K: KeyTrait, V: ValueTrait>(root: &'a mut RBNode<K, V>, key: &K) -> Option<&'a mut RBNode<K, V>> {
     match key.cmp(&root.key) {
         Ordering::Less => {
             root.left_child.as_mut().map_or(None, |x| search_node(x, key))
@@ -45,7 +51,7 @@ fn search_node<'a, K: Ord + fmt::Debug, V: fmt::Debug>(root: &'a mut RBNode<K, V
     }
 }
 
-fn insert_node<K: Ord + fmt::Debug, V: fmt::Debug>(root: &mut RBNode<K, V>, key: K, value: V) -> Option<V> {
+fn insert_node<K: KeyTrait, V: ValueTrait>(root: &mut RBNode<K, V>, key: K, value: V) -> Option<V> {
     match key.cmp(&root.key) {
         Ordering::Less => {
             if let Some(ref mut node) = root.left_child {
@@ -69,7 +75,25 @@ fn insert_node<K: Ord + fmt::Debug, V: fmt::Debug>(root: &mut RBNode<K, V>, key:
     }
 }
 
-fn dump<K: Ord + fmt::Debug, V: fmt::Debug>(root: &RBNode<K, V>) {
+#[inline]
+fn ensure_root_black<K: KeyTrait, V: ValueTrait>(root: &mut OptNode<K, V>) {
+    assert!(root.is_some());
+
+    root.as_mut().map(|x| x.set_color(RBColor::Black));
+}
+
+fn insert_n<K: KeyTrait, V: ValueTrait>(root: &mut OptNode<K, V>, key: K, value: V) -> Option<V> {
+    if root.is_none() {
+        *root = Some(Box::new(RBNode::new(key, value)));
+        ensure_root_black(root);
+
+        return None;
+    }
+
+    unimplemented!()
+}
+
+fn dump<K: KeyTrait, V: ValueTrait>(root: &RBNode<K, V>) {
 
     root.left_child.as_ref().map(|x| dump(&**x));
     println!("({:?}\t{:?}, \t{:?})", root.color, root.key, root.value);
@@ -77,7 +101,7 @@ fn dump<K: Ord + fmt::Debug, V: fmt::Debug>(root: &RBNode<K, V>) {
 }
 
 impl<K, V> RBNode<K, V>
-    where K: Ord + fmt::Debug, V: fmt::Debug {
+    where K: KeyTrait, V: ValueTrait {
 
     fn new(key: K, value: V) -> Self {
         RBNode::with_color(RBColor::Black, key, value)
@@ -92,10 +116,14 @@ impl<K, V> RBNode<K, V>
             right_child: None,
         }
     }
+
+    fn set_color(&mut self, color: RBColor) {
+        self.color = color;
+    }
 }
 
 impl<K, V> RBTree<K, V>
-    where K: Ord + fmt::Debug, V: fmt::Debug {
+    where K: KeyTrait, V: ValueTrait {
     pub fn new() -> Self {
         RBTree {
             root: None,
@@ -104,7 +132,7 @@ impl<K, V> RBTree<K, V>
 
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
         if self.root.is_none() {
-            self.root = Some(RBNode::with_color(RBColor::Black, key, value));
+            self.root = Some(Box::new(RBNode::with_color(RBColor::Black, key, value)));
             None
         } else {
             self.root.as_mut().and_then(|x| insert_node(x, key, value))
